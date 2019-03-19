@@ -92,21 +92,19 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences prefs = this.getSharedPreferences("myPrefsFile", 0);
         SharedPreferences.Editor editor = prefs.edit();
 
-        if (!search) {
-            historySize = scrollLayout.getChildCount();
-            for (int i = 0; i < historySize; i++) {
-                LinearLayout l = (LinearLayout) scrollLayout.getChildAt(i);
-                View v = l.getChildAt(0);
-                EditText e = (EditText) v;
-                editor.putString("note" + i, e.getText().toString());
-            }
+        if (search) {
+            populateView();
+            search = false;
         }
-        else {
-            historySize = notesList.size();
-            for (int i = 0; i < historySize; i++) {
-                editor.putString("note" + i, notesList.get(i));
-            }
+
+        populateNotesList();
+
+        editor.putInt("historySizeKey", notesList.size());
+
+        for (int i = 0; i < notesList.size(); i++) {
+            editor.putString("note"+ i, notesList.get(i));
         }
+
         editor.apply();
         //editor.commit();
 
@@ -118,8 +116,6 @@ public class MainActivity extends AppCompatActivity {
         notesList.add(note);
 
         if (!note.equals("")) {
-            //View newNote = null;
-            //newNote = (LinearLayout) View.inflate(MainActivity.this, R.layout.scroll_items, null);
             View newNote;
             newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
             EditText et = newNote.findViewById(R.id.editNote);
@@ -136,35 +132,45 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void search(View v) {
-        populateList();
+        if (!search) {
+            populateNotesList();
+        }
 
-        scrollLayout.removeAllViews();
+        search = true;
 
         String keyword = editText.getText().toString().trim();
-        for (int i = 0; i < notesList.size(); i++) {
-            if (notesList.get(i).contains(keyword)) {
-                View newNote;
-                newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
-                EditText et = newNote.findViewById(R.id.editNote);
-                et.setText(notesList.get(i));
-                Button db = newNote.findViewById(R.id.deleteButton);
-                db.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(MainActivity.this, "Don't delete while searching a non-empty keyword", Toast.LENGTH_LONG).show();
-                        //scrollLayout.removeView((View)v.getParent());
-                    }
-                });
-                scrollLayout.addView(newNote);
+
+        searchList.clear();
+        scrollLayout.removeAllViews();
+
+        for (String s : notesList) {
+            if (s.contains(keyword)) {
+                searchList.add(s);
             }
+        }
+
+        for (String s : searchList) {
+            View newNote;
+            newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
+            EditText et = newNote.findViewById(R.id.editNote);
+            et.setText(s);
+            Button db = newNote.findViewById(R.id.deleteButton);
+            db.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(MainActivity.this, "Don't delete while searching a non-empty keyword", Toast.LENGTH_LONG).show();
+                }
+            });
+            scrollLayout.addView(newNote);
         }
     }
 
     public void clearSearch(View v) {
-        populateList();
+        populateView();
+        search = false;
     }
 
-    private void populateList() {
+    private void populateView() {
         scrollLayout.removeAllViews();
 
         for (int i = 0; i < notesList.size(); i++) {
@@ -181,6 +187,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             scrollLayout.addView(newNote);
+        }
+    }
+
+    private void populateNotesList() {
+        notesList.clear();
+
+        for (int i = 0; i < scrollLayout.getChildCount(); i++) {
+            LinearLayout l = (LinearLayout) scrollLayout.getChildAt(i);
+            View v = l.getChildAt(0);
+            EditText e = (EditText) v;
+            notesList.add(e.getText().toString());
         }
     }
 }
