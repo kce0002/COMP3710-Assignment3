@@ -53,8 +53,6 @@ public class MainActivity extends AppCompatActivity {
         historySize = prefs.getInt("historySizeKey", historySize);
         for (int i = 0; i < historySize; i++) {
             String note = prefs.getString("note" + i, savedNote);
-            //View newNote = null;
-            //newNote = (LinearLayout) View.inflate(MainActivity.this, R.layout.scroll_items, null);
             View newNote;
             newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
             EditText et = newNote.findViewById(R.id.editNote);
@@ -67,23 +65,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             scrollLayout.addView(newNote);
-            //notesList.add(note);
         }
-
-        /*for (String s : notesList) {
-            View newNote = null;
-            newNote = (LinearLayout) View.inflate(MainActivity.this, R.layout.scroll_items, null);
-            EditText et = newNote.findViewById(R.id.editNote);
-            et.setText(s);
-            Button db = newNote.findViewById(R.id.deleteButton);
-            db.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    scrollLayout.removeView((View)v.getParent());
-                }
-            });
-            scrollLayout.addView(newNote);
-        }*/
 
     }
 
@@ -106,29 +88,34 @@ public class MainActivity extends AppCompatActivity {
         }
 
         editor.apply();
-        //editor.commit();
 
         super.onStop();
     }
 
     public void addNote(View v) {
-        String note = editText.getText().toString().trim();
-        notesList.add(note);
-
-        if (!note.equals("")) {
-            View newNote;
-            newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
-            EditText et = newNote.findViewById(R.id.editNote);
-            et.setText(note);
-            Button db = newNote.findViewById(R.id.deleteButton);
-            db.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    scrollLayout.removeView((View)v.getParent());
-                }
-            });
-            scrollLayout.addView(newNote);
+        if (search) {
+            Toast.makeText(MainActivity.this, "Don't add a note while searching", Toast.LENGTH_LONG).show();
         }
+        else {
+            String note = editText.getText().toString().trim();
+            notesList.add(note);
+
+            if (!note.equals("")) {
+                View newNote;
+                newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
+                EditText et = newNote.findViewById(R.id.editNote);
+                et.setText(note);
+                Button db = newNote.findViewById(R.id.deleteButton);
+                db.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        scrollLayout.removeView((View)v.getParent());
+                    }
+                });
+                scrollLayout.addView(newNote);
+            }
+        }
+
     }
 
     public void search(View v) {
@@ -138,13 +125,13 @@ public class MainActivity extends AppCompatActivity {
 
         search = true;
 
-        String keyword = editText.getText().toString().trim();
+        String keyword = editText.getText().toString().trim().toUpperCase();
 
         searchList.clear();
         scrollLayout.removeAllViews();
 
         for (String s : notesList) {
-            if (s.contains(keyword)) {
+            if (s.toUpperCase().contains(keyword)) {
                 searchList.add(s);
             }
         }
@@ -154,15 +141,17 @@ public class MainActivity extends AppCompatActivity {
             newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
             EditText et = newNote.findViewById(R.id.editNote);
             et.setText(s);
+            et.setFocusable(false);
             Button db = newNote.findViewById(R.id.deleteButton);
             db.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(MainActivity.this, "Don't delete while searching a non-empty keyword", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "Don't delete while searching", Toast.LENGTH_LONG).show();
                 }
             });
             scrollLayout.addView(newNote);
         }
+
     }
 
     public void clearSearch(View v) {
@@ -182,7 +171,6 @@ public class MainActivity extends AppCompatActivity {
             db.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //Toast.makeText(MainActivity.this, "Don't delete while searching a non-empty keyword", Toast.LENGTH_LONG).show();
                     scrollLayout.removeView((View)v.getParent());
                 }
             });
