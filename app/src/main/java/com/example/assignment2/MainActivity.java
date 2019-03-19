@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -27,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> notesList;
     ArrayList<String> searchList;
     int historySize;
+    boolean search;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
         historySize = 0;
         notesList = new ArrayList<>();
         searchList = new ArrayList<>();
+        search = false;
 
         String savedNote = "";
 
@@ -50,10 +53,24 @@ public class MainActivity extends AppCompatActivity {
         historySize = prefs.getInt("historySizeKey", historySize);
         for (int i = 0; i < historySize; i++) {
             String note = prefs.getString("note" + i, savedNote);
-            notesList.add(note);
+            //View newNote = null;
+            //newNote = (LinearLayout) View.inflate(MainActivity.this, R.layout.scroll_items, null);
+            View newNote;
+            newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
+            EditText et = newNote.findViewById(R.id.editNote);
+            et.setText(note);
+            Button delete = newNote.findViewById(R.id.deleteButton);
+            delete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    scrollLayout.removeView((View)v.getParent());
+                }
+            });
+            scrollLayout.addView(newNote);
+            //notesList.add(note);
         }
 
-        for (String s : notesList) {
+        /*for (String s : notesList) {
             View newNote = null;
             newNote = (LinearLayout) View.inflate(MainActivity.this, R.layout.scroll_items, null);
             EditText et = newNote.findViewById(R.id.editNote);
@@ -66,23 +83,32 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             scrollLayout.addView(newNote);
-        }
-
-
+        }*/
 
     }
 
     @Override
     protected void onStop() {
-        historySize = notesList.size();
-
         SharedPreferences prefs = this.getSharedPreferences("myPrefsFile", 0);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("historySizeKey", historySize);
-        for (int i = 0; i < historySize; i++) {
-            editor.putString("note" + i, notesList.get(i));
+
+        if (!search) {
+            historySize = scrollLayout.getChildCount();
+            for (int i = 0; i < historySize; i++) {
+                LinearLayout l = (LinearLayout) scrollLayout.getChildAt(i);
+                View v = l.getChildAt(0);
+                EditText e = (EditText) v;
+                editor.putString("note" + i, e.getText().toString());
+            }
         }
-        editor.commit();
+        else {
+            historySize = notesList.size();
+            for (int i = 0; i < historySize; i++) {
+                editor.putString("note" + i, notesList.get(i));
+            }
+        }
+        editor.apply();
+        //editor.commit();
 
         super.onStop();
     }
@@ -92,8 +118,10 @@ public class MainActivity extends AppCompatActivity {
         notesList.add(note);
 
         if (!note.equals("")) {
-            View newNote = null;
-            newNote = (LinearLayout) View.inflate(MainActivity.this, R.layout.scroll_items, null);
+            //View newNote = null;
+            //newNote = (LinearLayout) View.inflate(MainActivity.this, R.layout.scroll_items, null);
+            View newNote;
+            newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
             EditText et = newNote.findViewById(R.id.editNote);
             et.setText(note);
             Button db = newNote.findViewById(R.id.deleteButton);
@@ -105,6 +133,54 @@ public class MainActivity extends AppCompatActivity {
             });
             scrollLayout.addView(newNote);
         }
+    }
 
+    public void search(View v) {
+        populateList();
+
+        scrollLayout.removeAllViews();
+
+        String keyword = editText.getText().toString().trim();
+        for (int i = 0; i < notesList.size(); i++) {
+            if (notesList.get(i).contains(keyword)) {
+                View newNote;
+                newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
+                EditText et = newNote.findViewById(R.id.editNote);
+                et.setText(notesList.get(i));
+                Button db = newNote.findViewById(R.id.deleteButton);
+                db.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Toast.makeText(MainActivity.this, "Don't delete while searching a non-empty keyword", Toast.LENGTH_LONG).show();
+                        //scrollLayout.removeView((View)v.getParent());
+                    }
+                });
+                scrollLayout.addView(newNote);
+            }
+        }
+    }
+
+    public void clearSearch(View v) {
+        populateList();
+    }
+
+    private void populateList() {
+        scrollLayout.removeAllViews();
+
+        for (int i = 0; i < notesList.size(); i++) {
+            View newNote;
+            newNote = View.inflate(MainActivity.this, R.layout.scroll_items, null);
+            EditText et = newNote.findViewById(R.id.editNote);
+            et.setText(notesList.get(i));
+            Button db = newNote.findViewById(R.id.deleteButton);
+            db.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //Toast.makeText(MainActivity.this, "Don't delete while searching a non-empty keyword", Toast.LENGTH_LONG).show();
+                    scrollLayout.removeView((View)v.getParent());
+                }
+            });
+            scrollLayout.addView(newNote);
+        }
     }
 }
